@@ -3,7 +3,18 @@
 // Patreece Eichel & John Lazaro
 
 public func main() {
-  print("Welcome to BlackJack!");
+  var winner = nil;
+  
+  print("Welcome to BlackJack!\n");
+  var roundNum = 1;
+
+  // play until someone wins
+  while winner == nil {
+    print("Round \(roundNum++)\n");
+    playRound();
+  }
+  // announce winner
+  print("Congrats to \(winner) for winning the game!");
 }
 
 /**
@@ -18,7 +29,8 @@ public protocol BlackJackActions {
 *  Parent class for the dealer and player of the blackjack game
 */
 public class BlackJackParticipant : BlackJackActions {
-  
+
+  private var description = "Dealer";
   private var hand = Array<Card>(); // holds the participants hand of cards
 
   // Initialize a participant with a hand of cards
@@ -33,8 +45,12 @@ public class BlackJackParticipant : BlackJackActions {
     hand.append(Deck.drawCard());
   }
 
+  // Calculate the value of the cards in their hand
   public func checkHandValue() -> Int {
-    // add up the values of all cards in hand
+    var handValue = 0;
+    for card in hand {
+      handValue += card.getValue();
+    }
   }
 }
 
@@ -45,6 +61,7 @@ public class BlackJackParticipant : BlackJackActions {
 */
 public class Player : BlackJackParticipant {
   
+  private var description = "Player";
   private var balance : Balance; // keeps track of balance (bet amount)
 
   // initialize player with 100.00 balance
@@ -72,9 +89,15 @@ public class Player : BlackJackParticipant {
 */
 public class Dealer : BlackJackParticipant {
 
+  private var faceUpCard : Card;
+  
   // Initialize a dealer with a hand of cards
   public init(numCards : Int, deck: Deck) {
     super.init(numCards : numCards, deck: Deck);
+  }
+
+  public func viewFaceUpCard() -> Card {
+    return faceUpCard;
   }
 }
 
@@ -108,9 +131,12 @@ public struct Balance {
 
 /**
 * Simulates a round of gameplay
+* Returns the winning participant if there is a winner
 */
-public func playRound() {
+public func playRound() -> BlackJackParticipant? {
   
 }
+
+
 
 main();
