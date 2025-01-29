@@ -13,131 +13,11 @@ public func main() {
 
   // play until someone wins
   while winner == nil {
-    print("Round \(roundNum++)\n");
+    print("Round \(roundNum += 1)\n");
     playRound();
   }
   // announce winner
   print("Congrats to \(winner) for winning the game!");
-}
-
-/**
-* Defines blackjack actions that can be performed by the dealer and the player
-*/
-public protocol BlackJackActions {
-  public func hit(deck : Deck) -> Card 
-  public func checkHandValue() -> Int
-}
-
-/**
-*  Parent class for the dealer and player of the blackjack game
-*/
-public class BlackJackParticipant : BlackJackActions {
-
-  private var description = "Dealer";
-  private var hand = Array<Card>(); // holds the participants hand of cards
-
-  // Initialize a participant with a hand of cards
-  public init(numCards : Int, deck : Deck) {
-    for _ in numCards {
-      hand.append(deck.drawCard());
-    }
-  }
-  
-  // Allows player to draw a card from the deck and add it to their hand
-  public func hit(deck: Deck) {
-    hand.append(Deck.drawCard());
-  }
-
-  // Calculate the value of the cards in their hand
-  public func checkHandValue() -> Int {
-    var handValue = 0;
-    for card in hand {
-      handValue += card.value;
-    }
-  }
-}
-
-
-/**
-* Player class for creating a player that can perform blackjack actions
-* and work with their balance
-*/
-public class Player : BlackJackParticipant {
-  
-  private var description = "Player";
-  private var balance : Balance; // keeps track of balance (bet amount)
-
-  // initialize player with 100.00 balance
-  public init(numCards: Int) {
-    self.balance = Balance(startingBalance: 100.00);
-    super.init(numCards : numCards, deck : Deck);
-  }
-
-  // For half of their current bet, 
-  //the player can force the dealer to draw a replacement card
-  public func replaceDealerCard() {
-    
-  }
-
-  // For 25% of their current bet, 
-  // the player can replace the card that they drew last 
-  public func replaceLastDealtCard() {
-    
-  }
-}
-
-
-/**
-* Dealer class for creating a dealer that can perform blackjack actions
-*/
-public class Dealer : BlackJackParticipant {
-
-  private var faceUpCard : Card;
-  
-  // Initialize a dealer with a hand of cards
-  public init(numCards : Int, deck: Deck) {
-    super.init(numCards : numCards, deck: Deck);
-  }
-
-  public func viewFaceUpCard() -> Card {
-    return faceUpCard;
-  }
-}
-
-/**
-* Balance class tracks the balance of the player
-* you can add or subtract from the balance appropriatelu
-*/
-public struct Balance {
-  private var balance; 
-
-  // Initialize the Balance with a starting value
-  public init(startingBalance: Double){
-    balance = startingBalance;
-  }
-
-  // Retrieves the balance
-  public func getBalance() -> Double {
-    return balance;
-  }
-
-  // Reduces the balance by the provided amount
-  public func reduceBalance(amount: Double) {
-    balance -= amount;
-  }
-
-  // Increases the balance by the provided amount
-  public func increaseBalance(amount: Double) {
-    balance += amount;
-  }
-}
-
-/**
-* Simulates a round of gameplay
-* Returns the winning participant if there is a winner
-*/
-public func playRound() -> BlackJackParticipant? {
-  
 }
 
 /**
@@ -149,7 +29,7 @@ struct Card {
   private var val: cardVal
   var value: cardVal { 
     get {
-      return value
+      return val
     }
   }
 
@@ -177,7 +57,7 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        var newCard = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
+        let newCard = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
     }
@@ -197,6 +77,128 @@ class Deck {
   func drawCard() -> Card {
     return self.cards.remove(at: 0)
   }
+}
+
+/**
+* Defines blackjack actions that can be performed by the dealer and the player
+*/
+protocol BlackJackActions {
+  func hit(deck : Deck) -> Card 
+  func checkHandValue() -> Int
+}
+
+/**
+*  Parent class for the dealer and player of the blackjack game
+*/
+class BlackJackParticipant : BlackJackActions {
+
+  private var description = "Dealer";
+  private var hand = Array<Card>(); // holds the participants hand of cards
+
+  // Initialize a participant with a hand of cards
+  public init(numCards : Int, deck : Deck) {
+    for _ in 0...numCards {
+      hand.append(deck.drawCard());
+    }
+  }
+  
+  // Allows player to draw a card from the deck and add it to their hand
+  func hit(deck: Deck) -> Card{
+    var newCard = deck.drawCard();
+    hand.append(newCard);
+    return newCard;
+  }
+
+  // Calculate the value of the cards in their hand
+  func checkHandValue() -> Int {
+    var handValue = 0;
+    for card in hand {
+      handValue += card.value.rawValue;
+    }
+  }
+}
+
+
+/**
+* Player class for creating a player that can perform blackjack actions
+* and work with their balance
+*/
+class Player : BlackJackParticipant {
+  
+  private var description = "Player";
+  private var balance : Balance; // keeps track of balance (bet amount)
+
+  // initialize player with 100.00 balance
+  public init(numCards: Int) {
+    self.balance = Balance(startingBalance: 100.00);
+    super.init(numCards : numCards, deck : Deck);
+  }
+
+  // For half of their current bet, 
+  //the player can force the dealer to draw a replacement card
+  public func replaceDealerCard() {
+    
+  }
+
+  // For 25% of their current bet, 
+  // the player can replace the card that they drew last 
+  public func replaceLastDealtCard() {
+    
+  }
+}
+
+
+/**
+* Dealer class for creating a dealer that can perform blackjack actions
+*/
+class Dealer : BlackJackParticipant {
+
+  private var faceUpCard : Card;
+  
+  // Initialize a dealer with a hand of cards
+  public override init(numCards : Int, deck: Deck) {
+    super.init(numCards : numCards, deck: Deck);
+  }
+
+  public func viewFaceUpCard() -> Card {
+    return faceUpCard;
+  }
+}
+
+/**
+* Balance class tracks the balance of the player
+* you can add or subtract from the balance appropriatelu
+*/
+struct Balance {
+  private var balance; 
+
+  // Initialize the Balance with a starting value
+  public init(startingBalance: Double){
+    balance = startingBalance;
+  }
+
+  // Retrieves the balance
+  public func getBalance() -> Double {
+    return balance;
+  }
+
+  // Reduces the balance by the provided amount
+  public func reduceBalance(amount: Double) {
+    balance -= amount;
+  }
+
+  // Increases the balance by the provided amount
+  public func increaseBalance(amount: Double) {
+    balance += amount;
+  }
+}
+
+/**
+* Simulates a round of gameplay
+* Returns the winning participant if there is a winner
+*/
+func playRound() -> BlackJackParticipant? {
+  
 }
 
 main()
