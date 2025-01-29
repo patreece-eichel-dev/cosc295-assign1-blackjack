@@ -1,4 +1,4 @@
-enum cardSuit { case SPADE, CLUBS, DIAMOND, HEART }
+enum cardSuit: Int { case SPADE = 1, CLUBS, DIAMOND, HEART }
 enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING } 
 
 /**
@@ -30,35 +30,39 @@ class Deck {
    */
   init () {
     // Initialize the deck with 52 cards
-    for suit in cardSuit {
-      for value in cardVal {
-        self.cards.append(Card(suit: suit, val: value))
+    for suit in 1...4 {
+      for value in 1...13 {
+        // did new line for readability
+        var newCard = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
+        self.cards.append(newCard)
       }
     }
   }
 
   /**
-   * 
+   * This method is created in to deal with the array being private
    */
-  // func drawCard(player: Player) -> Card {
-  //  
-  // }
+  func shuffle() {
+    // Shuffle the deck
+    self.cards.shuffle()
+  }
+
+  /**
+   * This method will remove a card from the top and place it into a players hand
+   */
+  func drawCard(player: Player) -> Card {
+    return self.cards.remove(at: 0)
+  }
 }
 
 func main () {
   var gameActive: Bool = true
-  initGame()
+  var deck: Deck
+  deck.shuffle()
 
   while (gameActive) {
     
   }
-}
-
-/**
- * This method will initialize the game
- */
-func initGame () {
-  
 }
 
 main()
