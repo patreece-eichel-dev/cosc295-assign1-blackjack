@@ -8,13 +8,17 @@ enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NIN
 public func main() {
   var winner: BlackJackParticipant? = nil;
   
+  // generate the players and the deck
+  var player: BlackJackParticipant = Player(numCards: 2, deck: deck);
+  var dealer: BlackJackParticipant = Dealer(numCards: 2, deck: deck);
+  
   print("Welcome to BlackJack!\n");
-  var roundNum = 1;
+  var roundNum: Int = 1;
 
   // play until someone wins
   while winner == nil {
     print("Round \(roundNum += 1)\n");
-    playRound();
+    winner = playRound(player: player, dealer: dealer);
   }
   // announce winner
   print("Congrats to \(winner) for winning the game!");
@@ -58,7 +62,7 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        let newCard = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
+        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
     }
@@ -93,8 +97,8 @@ protocol BlackJackActions {
 */
 class BlackJackParticipant : BlackJackActions {
 
-  private var description = "Dealer";
-  private var hand = Array<Card>(); // holds the participants hand of cards
+  private var description: String = "Dealer";
+  private var hand: [Card] = Array<Card>(); // holds the participants hand of cards
   public var Hand: [Card] {
     get {
       return hand;
@@ -117,8 +121,8 @@ class BlackJackParticipant : BlackJackActions {
 
   // Calculate the value of the cards in their hand
   func checkHandValue() -> Int {
-    var handValue = 0;
-    for card in hand {
+    var handValue: Int = 0;
+    for card: Card in hand {
       handValue += card.value.rawValue;
     }
     return handValue;
@@ -132,7 +136,7 @@ class BlackJackParticipant : BlackJackActions {
 */
 class Player : BlackJackParticipant {
   
-  private var description = "Player";
+  private var description: String = "Player";
   private var balance : Balance; // keeps track of balance (bet amount)
 
   // initialize player with 100.00 balance
@@ -208,8 +212,34 @@ class Balance {
 * Simulates a round of gameplay
 * Returns the winning participant if there is a winner
 */
-func playRound() -> BlackJackParticipant? {
-  return nil
+func playRound(player: BlackJackParticipant, dealer: BlackJackParticipant) -> BlackJackParticipant? {
+  // assert that an active round is in session
+  var activeRound: Bool = true
+
+  // ask the user how much will the be betting
+  print("Place your bets!!: \n")
+
+  // while the round is still active
+  while (activeRound) {
+    // prompt the user on what action they will take
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card")
+    var action: String = readLine()!
+
+    // handle the action that the user has specified
+    switch(action) {
+      case "h":
+        player.hit()
+        break;
+      case "s"
+       break;
+      case "d"
+       break;
+      case "l"
+       break;
+    }
+  }
+
+  return nil;
 }
 
 main()
