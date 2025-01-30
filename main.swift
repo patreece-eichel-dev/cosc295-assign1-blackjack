@@ -6,7 +6,7 @@ enum cardSuit: Int { case SPADE = 1, CLUBS, DIAMOND, HEART }
 enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING } 
 
 public func main() {
-  var winner = nil;
+  var winner: BlackJackParticipant? = nil;
   
   print("Welcome to BlackJack!\n");
   var roundNum = 1;
@@ -54,6 +54,7 @@ class Deck {
    */
   init () {
     // Initialize the deck with 52 cards
+    cards = Array<Card>()
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
@@ -94,6 +95,11 @@ class BlackJackParticipant : BlackJackActions {
 
   private var description = "Dealer";
   private var hand = Array<Card>(); // holds the participants hand of cards
+  public var Hand: [Card] {
+    get {
+      return hand;
+    }
+  }
 
   // Initialize a participant with a hand of cards
   public init(numCards : Int, deck : Deck) {
@@ -115,6 +121,7 @@ class BlackJackParticipant : BlackJackActions {
     for card in hand {
       handValue += card.value.rawValue;
     }
+    return handValue;
   }
 }
 
@@ -129,9 +136,9 @@ class Player : BlackJackParticipant {
   private var balance : Balance; // keeps track of balance (bet amount)
 
   // initialize player with 100.00 balance
-  public init(numCards: Int) {
+  public override init(numCards: Int, deck targetedDeck: Deck) {
     self.balance = Balance(startingBalance: 100.00);
-    super.init(numCards : numCards, deck : Deck);
+    super.init(numCards : numCards, deck : targetedDeck);
   }
 
   // For half of their current bet, 
@@ -153,15 +160,19 @@ class Player : BlackJackParticipant {
 */
 class Dealer : BlackJackParticipant {
 
-  private var faceUpCard : Card;
+  private var faceUpCard : Card?;
   
   // Initialize a dealer with a hand of cards
-  public override init(numCards : Int, deck: Deck) {
-    super.init(numCards : numCards, deck: Deck);
+  public override init(numCards : Int, deck targetedDeck: Deck) {
+    self.faceUpCard = nil
+    super.init(numCards : numCards, deck: targetedDeck);
+    var upCard:Int = Int.random(in: 0...self.Hand.count)  // get random as needed within the range
+    self.faceUpCard = self.Hand[upCard];
+
   }
 
   public func viewFaceUpCard() -> Card {
-    return faceUpCard;
+    return faceUpCard!;
   }
 }
 
@@ -169,8 +180,8 @@ class Dealer : BlackJackParticipant {
 * Balance class tracks the balance of the player
 * you can add or subtract from the balance appropriatelu
 */
-struct Balance {
-  private var balance; 
+class Balance {
+  private var balance: Double; 
 
   // Initialize the Balance with a starting value
   public init(startingBalance: Double){
@@ -198,7 +209,7 @@ struct Balance {
 * Returns the winning participant if there is a winner
 */
 func playRound() -> BlackJackParticipant? {
-  
+  return nil
 }
 
 main()
