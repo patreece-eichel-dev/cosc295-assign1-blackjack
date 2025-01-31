@@ -52,6 +52,11 @@ public class BlackJackParticipant : BlackJackActions {
       handValue += card.getValue();
     }
   }
+
+  // draw a new card to replace the last card
+  public func replaceLastDraw(deck: Deck) {
+    hand[hand.count - 1] = deck.drawCard();
+  }
 }
 
 
@@ -73,13 +78,15 @@ public class Player : BlackJackParticipant {
   // For half of their current bet, 
   //the player can force the dealer to draw a replacement card
   public func replaceDealerCard() {
-    
+    self.balance -= 0.50 * balance; // reduce bet/balance by 50%
+    dealer.replaceFaceUpCard(deck.drawCard());
   }
 
   // For 25% of their current bet, 
   // the player can replace the card that they drew last 
-  public func replaceLastDealtCard() {
-    
+  public func replaceLastDealtCard(deck: Deck) {
+    self.balance -= 0.25 * balance; // reduce bet/balance by 25%
+    self.replaceLastDealtCard(deck);
   }
 }
 
