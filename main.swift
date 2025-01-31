@@ -7,18 +7,23 @@ enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NIN
 
 public func main() {
   var winner: BlackJackParticipant? = nil;
-  
+
+  // Generate the deck that will be used
+  var deck: Deck = Deck();
+
   // generate the players and the deck
-  var player: BlackJackParticipant = Player(numCards: 2, deck: deck);
-  var dealer: BlackJackParticipant = Dealer(numCards: 2, deck: deck);
+  let player: Player = Player(numCards: 2, deck: deck);
+  let dealer: Dealer = Dealer(numCards: 2, deck: deck);
   
   print("Welcome to BlackJack!\n");
   var roundNum: Int = 1;
 
   // play until someone wins
   while winner == nil {
+    deck.shuffle();
     print("Round \(roundNum += 1)\n");
     winner = playRound(player: player, dealer: dealer);
+    deck = Deck();
   }
   // announce winner
   print("Congrats to \(winner) for winning the game!");
@@ -31,7 +36,7 @@ public func main() {
 struct Card {
   private var suit: cardSuit
   private var val: cardVal
-  var value: cardVal { 
+  var value: cardVal {
     get {
       return val
     }
@@ -88,7 +93,7 @@ class Deck {
 * Defines blackjack actions that can be performed by the dealer and the player
 */
 protocol BlackJackActions {
-  func hit(deck : Deck) -> Card 
+  func hit() -> Card 
   func checkHandValue() -> Int
 }
 
@@ -99,6 +104,7 @@ class BlackJackParticipant : BlackJackActions {
 
   private var description: String = "Dealer";
   private var hand: [Card] = Array<Card>(); // holds the participants hand of cards
+  private var deck: Deck
   public var Hand: [Card] {
     get {
       return hand;
@@ -107,14 +113,15 @@ class BlackJackParticipant : BlackJackActions {
 
   // Initialize a participant with a hand of cards
   public init(numCards : Int, deck : Deck) {
+    self.deck = deck;
     for _ in 0...numCards {
-      hand.append(deck.drawCard());
+      hand.append(self.deck.drawCard());
     }
   }
   
   // Allows player to draw a card from the deck and add it to their hand
-  func hit(deck: Deck) -> Card{
-    var newCard = deck.drawCard();
+  func hit() -> Card {
+    let newCard: Card = deck.drawCard();
     hand.append(newCard);
     return newCard;
   }
@@ -164,19 +171,17 @@ class Player : BlackJackParticipant {
 */
 class Dealer : BlackJackParticipant {
 
-  private var faceUpCard : Card?;
+  private var faceUpCard : Card;
   
   // Initialize a dealer with a hand of cards
   public override init(numCards : Int, deck targetedDeck: Deck) {
-    self.faceUpCard = nil
+    self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
     super.init(numCards : numCards, deck: targetedDeck);
-    var upCard:Int = Int.random(in: 0...self.Hand.count)  // get random as needed within the range
-    self.faceUpCard = self.Hand[upCard];
-
+    self.faceUpCard =  self.Hand[Int.random(in: 0...self.Hand.count)];
   }
 
   public func viewFaceUpCard() -> Card {
-    return faceUpCard!;
+    return faceUpCard;
   }
 }
 
@@ -212,7 +217,7 @@ class Balance {
 * Simulates a round of gameplay
 * Returns the winning participant if there is a winner
 */
-func playRound(player: BlackJackParticipant, dealer: BlackJackParticipant) -> BlackJackParticipant? {
+func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // assert that an active round is in session
   var activeRound: Bool = true
 
@@ -223,18 +228,21 @@ func playRound(player: BlackJackParticipant, dealer: BlackJackParticipant) -> Bl
   while (activeRound) {
     // prompt the user on what action they will take
     print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card")
-    var action: String = readLine()!
+    let action: String = readLine()!
 
     // handle the action that the user has specified
     switch(action) {
       case "h":
         player.hit()
         break;
-      case "s"
+      case "s":
+      activeRound = false
        break;
-      case "d"
+      case "d":
        break;
-      case "l"
+      case "l":
+       break;
+      default:
        break;
     }
   }
@@ -242,4 +250,5 @@ func playRound(player: BlackJackParticipant, dealer: BlackJackParticipant) -> Bl
   return nil;
 }
 
+print("this is a test")
 main()
