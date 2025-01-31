@@ -140,10 +140,12 @@ class BlackJackParticipant : BlackJackActions {
 class Player : BlackJackParticipant {
   
   private var balance : Balance; // keeps track of balance (bet amount)
+  private var bet : Double;
 
   // initialize player with 100.00 balance
   public override init(numCards: Int, deck targetedDeck: Deck, description: String = "Player") {
     self.balance = Balance(startingBalance: 100.00);
+    self.bet = -1.00; // force them to set it 
     super.init(numCards : numCards, deck : targetedDeck, description: description);
   }
 
@@ -161,8 +163,16 @@ class Player : BlackJackParticipant {
     hand[hand.count - 1] = self.deck.drawCard(); // replace last card in hand with a new one
   }
 
+  // takes the amount the player wishes to bet
+  public func placeBet() {
+    while (self.bet > self.balance.getBalance() || bet <= 0.00) {
+      print("Enter your bet amount between $0.01 and $\(self.balance.getBalance()): ");
+      self.bet = Double(readLine()!)!;
+    }
+  }
+
    public func getRules() -> String {
-    return "BlackJack Rules\n";
+    return "BlackJack Rules\n You will start with a balance of $100.00\nYou can bet up to the amount of your balance.\nf you win, the amount that you bet will be added to your balance. If you lose, that amount will be deducted from your balance.\nDuring the game you are allowed to hit, stand, replace the dealer's face up card, and replace your last dealt card\n";
   }
 }
 
@@ -226,7 +236,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   var activeRound: Bool = true
 
   // ask the user how much will the be betting
-  print("Place your bets!!: \n")
+  player.placeBet();
 
   // while the round is still active
   while (activeRound) {
