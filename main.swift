@@ -102,18 +102,14 @@ protocol BlackJackActions {
 */
 class BlackJackParticipant : BlackJackActions {
 
-  private var description: String = "Dealer";
-  private var hand: [Card] = Array<Card>(); // holds the participants hand of cards
-  private var deck: Deck
-  public var Hand: [Card] {
-    get {
-      return hand;
-    }
-  }
-
+  internal var description: String;
+  internal var hand: [Card] = Array<Card>(); // holds the participants hand of cards
+  internal var deck: Deck
+  
   // Initialize a participant with a hand of cards
-  public init(numCards : Int, deck : Deck) {
+  public init(numCards : Int, deck : Deck, description: String) {
     self.deck = deck;
+    self.description = description;
     for _ in 0...numCards {
       hand.append(self.deck.drawCard());
     }
@@ -134,11 +130,6 @@ class BlackJackParticipant : BlackJackActions {
     }
     return handValue;
   }
-
-  // draw a new card to replace the last card
-  public func replaceLastDraw(deck: Deck) {
-    hand[hand.count - 1] = deck.drawCard();
-  }
 }
 
 
@@ -148,30 +139,32 @@ class BlackJackParticipant : BlackJackActions {
 */
 class Player : BlackJackParticipant {
   
-  private var description: String = "Player";
   private var balance : Balance; // keeps track of balance (bet amount)
 
   // initialize player with 100.00 balance
-  public override init(numCards: Int, deck targetedDeck: Deck) {
+  public override init(numCards: Int, deck targetedDeck: Deck, description: String = "Player") {
     self.balance = Balance(startingBalance: 100.00);
-    super.init(numCards : numCards, deck : targetedDeck);
+    super.init(numCards : numCards, deck : targetedDeck, description: description);
   }
 
   // For half of their current bet, 
   //the player can force the dealer to draw a replacement card
-  public func replaceDealerCard() {
-    self.balance -= 0.50 * balance; // reduce bet/balance by 50%
-    dealer.replaceFaceUpCard(deck.drawCard());
+  public func replaceDealerCard(dealer: Dealer) {
+    self.balance.reduceBalance(amount: 0.5 * self.balance.getBalance()); // reduce bet/balance by 50%
+    dealer.replaceFaceUpCard();
   }
 
   // For 25% of their current bet, 
   // the player can replace the card that they drew last 
-  public func replaceLastDealtCard(deck: Deck) {
-    self.balance -= 0.25 * balance; // reduce bet/balance by 25%
-    self.replaceLastDealtCard(deck);
+  public func replaceLastDealtCard() {
+    self.balance.reduceBalance(amount: 0.25 * self.balance.getBalance()); // reduce balance by 25%
+    hand[hand.count - 1] = self.deck.drawCard(); // replace last card in hand with a new one
+  }
+
+   public func getRules() -> String {
+    return "BlackJack Rules\n";
   }
 }
-
 
 /**
 * Dealer class for creating a dealer that can perform blackjack actions
@@ -181,14 +174,18 @@ class Dealer : BlackJackParticipant {
   private var faceUpCard : Card;
   
   // Initialize a dealer with a hand of cards
-  public override init(numCards : Int, deck targetedDeck: Deck) {
+  public override init(numCards : Int, deck targetedDeck: Deck, description: String = "Dealer") {
     self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
-    super.init(numCards : numCards, deck: targetedDeck);
-    self.faceUpCard =  self.Hand[Int.random(in: 0...self.Hand.count)];
+    super.init(numCards : numCards, deck: targetedDeck, description: description);
+    self.faceUpCard =  self.hand[Int.random(in: 0...self.hand.count)];
   }
 
   public func viewFaceUpCard() -> Card {
     return faceUpCard;
+  }
+
+  public func replaceFaceUpCard() {
+    self.faceUpCard = self.deck.drawCard();
   }
 }
 
@@ -234,7 +231,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // while the round is still active
   while (activeRound) {
     // prompt the user on what action they will take
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card")
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
     let action: String = readLine()!
 
     // handle the action that the user has specified
@@ -246,8 +243,13 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       activeRound = false
        break;
       case "d":
+        player.replaceDealerCard(dealer: dealer);
        break;
       case "l":
+        player.replaceLastDealtCard();
+       break;
+      case "v":
+        print(player.getRules());
        break;
       default:
        break;
