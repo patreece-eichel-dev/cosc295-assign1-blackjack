@@ -172,7 +172,19 @@ class Player : BlackJackParticipant {
   }
 
    public func getRules() -> String {
-    return "BlackJack Rules\n You will start with a balance of $100.00\nYou can bet up to the amount of your balance.\nf you win, the amount that you bet will be added to your balance. If you lose, that amount will be deducted from your balance.\nDuring the game you are allowed to hit, stand, replace the dealer's face up card, and replace your last dealt card\n";
+    return "BlackJack Rules\n You will start with a balance of $100.00\n" +
+            "You can bet $0.01 up to the amount of your balance.\n" +
+            "if you win, the amount that you bet will be added to your balance." +
+            " If you lose, that amount will be deducted from your balance.\n" +
+            "The objective of the game is to get as close to 21 as possible without going over and causing a bust\n" +
+            "OR to draw a Black Jack which means an automatic win\n" +
+            "During the game you are allowed to hit, stand, replace the dealer's face up card, and replace your last dealt card\n" +
+            "The game will end when a winner is determined, you choose to quit, or your balance runs out\n" + 
+            "Below the actions you can take are described in detail:\n" +
+            "[h]it: draw a \n" +
+            "[s]tand: \n" +
+            "replace [d]ealer card: \n" +
+            "replace [l]ast dealt card: \n" +
   }
 }
 
@@ -269,5 +281,4 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   return nil;
 }
 
-print("this is a test")
 main()
