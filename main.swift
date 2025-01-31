@@ -6,14 +6,14 @@ enum cardSuit: Int { case SPADE = 1, CLUBS, DIAMOND, HEART }
 enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING } 
 
 public func main() {
-  var winner: BlackJackParticipant? = nil;
-
   // Generate the deck that will be used
   var deck: Deck = Deck();
-
+  
   // generate the players and the deck
-  let player: Player = Player(numCards: 2, deck: deck);
-  let dealer: Dealer = Dealer(numCards: 2, deck: deck);
+  let player: Player = Player(deck: deck);
+  let dealer: Dealer = Dealer(deck: deck);
+  
+  var winner: BlackJackParticipant? = nil;
   
   print("Welcome to BlackJack!\n");
   var roundNum: Int = 1;
@@ -67,7 +67,8 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!, val: cardVal(rawValue: value)!)
+        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
+                                 val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
     }
@@ -93,7 +94,7 @@ class Deck {
 * Defines blackjack actions that can be performed by the dealer and the player
 */
 protocol BlackJackActions {
-  func hit() -> Card 
+  func hit() -> Card
   func checkHandValue() -> Int
 }
 
@@ -101,18 +102,14 @@ protocol BlackJackActions {
 *  Parent class for the dealer and player of the blackjack game
 */
 class BlackJackParticipant : BlackJackActions {
-
   internal var description: String;
   internal var hand: [Card] = Array<Card>(); // holds the participants hand of cards
-  internal var deck: Deck
-  
+  private var deck: Deck
+
   // Initialize a participant with a hand of cards
-  public init(numCards : Int, deck : Deck, description: String) {
+  public init(deck : Deck) {
+    description = "Dealer";
     self.deck = deck;
-    self.description = description;
-    for _ in 0...numCards {
-      hand.append(self.deck.drawCard());
-    }
   }
   
   // Allows player to draw a card from the deck and add it to their hand
@@ -143,10 +140,10 @@ class Player : BlackJackParticipant {
   private var bet : Double;
 
   // initialize player with 100.00 balance
-  public override init(numCards: Int, deck targetedDeck: Deck, description: String = "Player") {
+  public override init(deck targetedDeck: Deck, description: String = "Player") {
     self.balance = Balance(startingBalance: 100.00);
     self.bet = -1.00; // force them to set it 
-    super.init(numCards : numCards, deck : targetedDeck, description: description);
+    super.init(deck : targetedDeck, description: description);
   }
 
   // For half of their current bet, 
@@ -184,9 +181,9 @@ class Dealer : BlackJackParticipant {
   private var faceUpCard : Card;
   
   // Initialize a dealer with a hand of cards
-  public override init(numCards : Int, deck targetedDeck: Deck, description: String = "Dealer") {
+  public override init(deck targetedDeck: Deck) {
     self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
-    super.init(numCards : numCards, deck: targetedDeck, description: description);
+    super.init(deck: targetedDeck);
     self.faceUpCard =  self.hand[Int.random(in: 0...self.hand.count)];
   }
 
@@ -238,20 +235,30 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // ask the user how much will the be betting
   player.placeBet();
 
+  for _ in 0...2 {
+    player.hit();
+    dealer.hit();
+  }
+
   // while the round is still active
   while (activeRound) {
     // prompt the user on what action they will take
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
+    print ("Current hand: \n")
+    for card in 0...player.hand.count {
+      print("\(player.hand[card].toString())\n")
+    }
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card\n")
     let action: String = readLine()!
-
+    // print("Current Value: \(player.checkHandValue())")
+    
     // handle the action that the user has specified
     switch(action) {
       case "h":
-        player.hit()
+        let _ = player.hit()
         break;
       case "s":
-      activeRound = false
-       break;
+        activeRound = false
+        break;
       case "d":
         player.replaceDealerCard(dealer: dealer);
        break;
@@ -264,10 +271,20 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       default:
        break;
     }
+
+    if (player.checkHandValue() > 21) {
+      print("You Lose!")
+      return dealer;
+    }
   }
 
-  return nil;
+  if (player.checkHandValue() > dealer.checkHandValue()) {
+    print("You Win!")
+    return player;
+  } else {
+    print("You Lose!")
+    return dealer;
+  }
 }
 
-print("this is a test")
 main()
