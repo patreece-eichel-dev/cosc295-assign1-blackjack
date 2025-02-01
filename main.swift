@@ -28,7 +28,8 @@ public func main() {
     deck = Deck();
   }
   // announce winner
-  print("Congrats to \(winner) for winning the game!");
+  print("Congrats to \(winner!.description) for winning the game!");
+  
 }
 
 /**
@@ -144,8 +145,17 @@ class Player : BlackJackParticipant {
   // initialize player with 100.00 balance
   public override init(deck targetedDeck: Deck, description: String = "Player") {
     self.balance = Balance(startingBalance: 100.00);
-    self.bet = -1.00; // force them to set it 
+    self.bet = -1.00; // force them to set a bet
     super.init(deck : targetedDeck, description: description);
+  }
+
+  // prints out tha cards in their hand and the total value
+  public func viewHand() {
+    print ("Current hand:")
+    for card in 0..<self.hand.count {
+      print("\(self.hand[card].toString())")
+    }
+    print("Current hand value: \(self.checkHandValue())\n");
   }
 
   // For half of their current bet, 
@@ -192,22 +202,30 @@ class Player : BlackJackParticipant {
 */
 class Dealer : BlackJackParticipant {
 
-  internal var faceUpCard : Card;
+  // optional because it can only happen after cards have been dealt
+  internal var faceUpCard : Card?; 
   
   // Initialize a dealer with a hand of cards
   public override init(deck targetedDeck: Deck, description : String) {
-    // self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
-    // self.faceUpCard =  self.hand[Int.random(in: 0..<self.hand.count)];
-    self.faceUpCard = targetedDeck.drawCard();
     super.init(deck: targetedDeck, description: description);
-    
-
   }
 
-  public func viewFaceUpCard() -> Card {
-    return faceUpCard;
+  // takes a random card in the dealers hand and turns it face up
+  public func turnCardFaceUp() {
+    self.faceUpCard =  self.hand[Int.random(in: 0..<self.hand.count)];
   }
 
+  // prints the faceup card in the dealers hand
+  // flips one if there isn't one
+  public func viewFaceUpCard() {
+    print("Dealer's face-up card:");
+    if self.faceUpCard == nil {
+      self.turnCardFaceUp();
+    } 
+    print("\((self.faceUpCard!).toString())\n");
+  }
+
+  // replaces faceup card with a new one from the deck
   public func replaceFaceUpCard() {
     self.faceUpCard = self.deck.drawCard();
   }
@@ -249,9 +267,10 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // assert that an active round is in session
   var activeRound: Bool = true
 
-  // ask the user how much will the be betting
+  // ask the user how much will the be betting before each round
   player.placeBet();
 
+  // each draw 2 cards into hand
   for _ in 0..<2 {
     player.hit();
     dealer.hit();
@@ -259,19 +278,21 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
 
   // while the round is still active
   while (activeRound) {
-    // prompt the user on what action they will take
-    print ("Current hand: \n")
-    for card in 0..<player.hand.count {
-      print("\(player.hand[card].toString())\n")
-    }
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules\n")
+
+    // show the hand
+    player.viewHand();
+
+    // show dealers face up card, flipping one if there isn't one already face up
+    dealer.viewFaceUpCard();
+    
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
     var action: String = readLine()!
-    print("Current Value: \(player.checkHandValue())")
     
     // handle the action that the user has specified
     switch(action) {
       case "h":
-        player.hit()
+        print("Drawn Card: \(player.hit().toString())\n" + 
+        "New Hand Value: \(player.checkHandValue())\n");
         break;
       case "s":
         activeRound = false
@@ -302,7 +323,6 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     print("You Lose!")
     return dealer;
   }
-  return player;
 }
 
 main()
