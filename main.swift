@@ -10,18 +10,20 @@ public func main() {
   var deck: Deck = Deck();
   
   // generate the players and the deck
-  let player: Player = Player(deck: deck);
-  let dealer: Dealer = Dealer(deck: deck);
+  let player: Player = Player(deck: deck, description : "Player");
+  let dealer: Dealer = Dealer(deck: deck, description : "Dealer");
   
   var winner: BlackJackParticipant? = nil;
   
   print("Welcome to BlackJack!\n");
-  var roundNum: Int = 1;
+  var roundNum: Int = 0;
 
   // play until someone wins
   while winner == nil {
     deck.shuffle();
-    print("Round \(roundNum += 1)\n");
+    roundNum += 1;
+    print("Round \(roundNum)\n");
+    
     winner = playRound(player: player, dealer: dealer);
     deck = Deck();
   }
@@ -67,7 +69,7 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
+        var newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
                                  val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
@@ -104,17 +106,17 @@ protocol BlackJackActions {
 class BlackJackParticipant : BlackJackActions {
   internal var description: String;
   internal var hand: [Card] = Array<Card>(); // holds the participants hand of cards
-  private var deck: Deck
+  internal var deck: Deck
 
   // Initialize a participant with a hand of cards
-  public init(deck : Deck) {
-    description = "Dealer";
+  public init(deck : Deck, description: String) {
+    self.description = description;
     self.deck = deck;
   }
   
   // Allows player to draw a card from the deck and add it to their hand
   func hit() -> Card {
-    let newCard: Card = deck.drawCard();
+    var newCard: Card = deck.drawCard();
     hand.append(newCard);
     return newCard;
   }
@@ -181,7 +183,7 @@ class Player : BlackJackParticipant {
             "[h]it: draw a \n" +
             "[s]tand: \n" +
             "replace [d]ealer card: \n" +
-            "replace [l]ast dealt card: \n" +
+            "replace [l]ast dealt card: \n";
   }
 }
 
@@ -190,13 +192,16 @@ class Player : BlackJackParticipant {
 */
 class Dealer : BlackJackParticipant {
 
-  private var faceUpCard : Card;
+  internal var faceUpCard : Card;
   
   // Initialize a dealer with a hand of cards
-  public override init(deck targetedDeck: Deck) {
-    self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
-    super.init(deck: targetedDeck);
-    self.faceUpCard =  self.hand[Int.random(in: 0...self.hand.count)];
+  public override init(deck targetedDeck: Deck, description : String) {
+    // self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
+    // self.faceUpCard =  self.hand[Int.random(in: 0..<self.hand.count)];
+    self.faceUpCard = targetedDeck.drawCard();
+    super.init(deck: targetedDeck, description: description);
+    
+
   }
 
   public func viewFaceUpCard() -> Card {
@@ -247,7 +252,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // ask the user how much will the be betting
   player.placeBet();
 
-  for _ in 0...2 {
+  for _ in 0..<2 {
     player.hit();
     dealer.hit();
   }
@@ -256,17 +261,17 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   while (activeRound) {
     // prompt the user on what action they will take
     print ("Current hand: \n")
-    for card in 0...player.hand.count {
+    for card in 0..<player.hand.count {
       print("\(player.hand[card].toString())\n")
     }
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card\n")
-    let action: String = readLine()!
-    // print("Current Value: \(player.checkHandValue())")
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules\n")
+    var action: String = readLine()!
+    print("Current Value: \(player.checkHandValue())")
     
     // handle the action that the user has specified
     switch(action) {
       case "h":
-        let _ = player.hit()
+        player.hit()
         break;
       case "s":
         activeRound = false
@@ -297,6 +302,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     print("You Lose!")
     return dealer;
   }
+  return player;
 }
 
 main()
