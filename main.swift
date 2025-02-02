@@ -13,23 +13,35 @@ public func main() {
   let player: Player = Player(deck: deck, description : "Player");
   let dealer: Dealer = Dealer(deck: deck, description : "Dealer");
 
-  var winner: BlackJackParticipant? = nil;
+  var cont: Bool = true
 
   print("Welcome to BlackJack!\n");
   var roundNum: Int = 0;
 
-  // play until someone wins
-  while winner == nil {
+  // play you go broke or if you quit
+  while cont {
+    player.clearHand();
+    dealer.clearHand();
     deck.shuffle();
     roundNum += 1;
     print("Round \(roundNum)\n");
 
-    winner = playRound(player: player, dealer: dealer);
+    let winner = playRound(player: player, dealer: dealer);
     deck = Deck();
-  }
-  // announce winner
-  print("Congrats to \(winner!.description) for winning the game!");
 
+    // announce winner
+    print("Congrats to \(winner!.description) for winning round \(roundNum)!\n");
+    
+    if (player.bal.getBalance() <= 0) {
+      print("You have gone broke! No more gambling! Game Over\n");
+      cont = false;
+    } else {
+      print("Continue to play? (y/n)");
+      cont = readLine() == "y";
+    }
+  }
+  
+  print("Thanks for playing!")
 }
 
 /**
@@ -70,7 +82,7 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        var newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
+        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
                                  val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
@@ -117,7 +129,7 @@ class BlackJackParticipant : BlackJackActions {
 
   // Allows player to draw a card from the deck and add it to their hand
   func hit() -> Card {
-    var newCard: Card = deck.drawCard();
+    let newCard: Card = deck.drawCard();
     hand.append(newCard);
     return newCard;
   }
@@ -126,10 +138,29 @@ class BlackJackParticipant : BlackJackActions {
   func checkHandValue() -> Int {
     var handValue: Int = 0;
     for card: Card in hand {
-      handValue += card.value.rawValue;
+      if (card.value.rawValue == 1 && handValue < 10) {
+        handValue += 11;
+      } else if (card.value.rawValue < 10) {
+        handValue += card.value.rawValue;
+      } else {
+        handValue += 10;
+      }
     }
     return handValue;
   }
+
+  func clearHand() {
+    hand = Array<Card>();
+  }
+
+  // func hasBlackJack() -> Bool {
+  //   if (hand.contains(where: Card(suit: cardSuit.CLUBS, val: cardVal.ACE) && Card(suit:cardSuit.CLUBS, val: cardVal.JACK) ||
+  //     Card(suit: cardSuit.SPADE, val: cardVal.ACE) && Card(suit:cardSuit.SPADE, val: cardVal.JACK))) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
 }
 
 
@@ -141,6 +172,17 @@ class Player : BlackJackParticipant {
 
   private var balance : Balance; // keeps track of balance (bet amount)
   private var bet : Double;
+
+  public var bal: Balance {
+    get {
+      return balance;
+    }
+  }
+  public var Bet: Double {
+    get {
+      return bet;
+    }
+  }
 
   // initialize player with 100.00 balance
   public override init(deck targetedDeck: Deck, description: String = "Player") {
@@ -161,23 +203,26 @@ class Player : BlackJackParticipant {
   // For half of their current bet, 
   //the player can force the dealer to draw a replacement card
   public func replaceDealerCard(dealer: Dealer) {
-    self.balance.reduceBalance(amount: 0.5 * self.balance.getBalance()); // reduce bet/balance by 50%
+    self.bet *= 0.5 // reduce bet by 50%
     dealer.replaceFaceUpCard();
   }
 
   // For 25% of their current bet, 
   // the player can replace the card that they drew last 
   public func replaceLastDealtCard() {
-    self.balance.reduceBalance(amount: 0.25 * self.balance.getBalance()); // reduce balance by 25%
+    self.bet *= 0.75; // reduce bet by 25%
     hand[hand.count - 1] = self.deck.drawCard(); // replace last card in hand with a new one
   }
 
   // takes the amount the player wishes to bet
   public func placeBet() {
-    while (self.bet > self.balance.getBalance() || bet <= 0.00) {
+    repeat {
       print("Enter your bet amount between $0.01 and $\(self.balance.getBalance()): ");
-      self.bet = Double(readLine()!)!;
-    }
+      let betAmount: Double = Double(readLine()!)!;
+      self.bet = betAmount;
+    } while (self.bet > self.balance.getBalance() || bet <= 0.00)
+
+    self.balance.reduceBalance(amount: self.bet);
   }
 
    public func getRules() -> String {
@@ -264,20 +309,21 @@ class Balance {
 * Returns the winning participant if there is a winner
 */
 func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
-  // assert that an active round is in session
-  var activeRound: Bool = true
+  // assert that both players are actively taking their turns
+  var playerHitting: Bool = true;
+  var dealerHitting: Bool = true;
 
   // ask the user how much will the be betting before each round
   player.placeBet();
 
   // each draw 2 cards into hand
   for _ in 0..<2 {
-    player.hit();
-    dealer.hit();
+    let _ = player.hit();
+    let _ = dealer.hit();
   }
 
   // while the round is still active
-  while (activeRound) {
+  while (playerHitting || dealerHitting) {
 
     // show the hand
     player.viewHand();
@@ -285,42 +331,82 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     // show dealers face up card, flipping one if there isn't one already face up
     dealer.viewFaceUpCard();
 
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
-    var action: String = readLine()!
-
     // handle the action that the user has specified
-    switch(action) {
-      case "h":
-        print("Drawn Card: \(player.hit().toString())\n" + 
-        "New Hand Value: \(player.checkHandValue())\n");
-        break;
-      case "s":
-        activeRound = false
-        break;
-      case "d":
-        player.replaceDealerCard(dealer: dealer);
-       break;
-      case "l":
-        player.replaceLastDealtCard();
-       break;
-      case "v":
-        print(player.getRules());
-       break;
-      default:
-       break;
+    if (playerHitting) {
+      print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
+      let action: String = readLine()!
+      switch(action) {
+        case "h":
+          print("Drawn Card: \(player.hit().toString())\n" + 
+          "New Hand Value: \(player.checkHandValue())\n");
+          break;
+        case "s":
+          playerHitting = false
+          break;
+        case "d":
+          player.replaceDealerCard(dealer: dealer);
+          break;
+        case "l":
+          player.replaceLastDealtCard();
+          break;
+        case "v":
+          print(player.getRules());
+          break;
+        default:
+          print(player.getRules());
+          break;
+      }
     }
 
-    if (player.checkHandValue() > 21) {
-      print("You Lose!")
+    if (dealer.checkHandValue() < 17) {
+      print("Dealer hit");
+      let _ = dealer.hit();
+    } else {
+      print("Dealer stands");
+      dealerHitting = false;
+    }
+    
+    // if (dealer.hasBlackJack()) {
+    //   print("Dealer got a blackjack! You lose!");
+    //   return dealer;
+    // }
+
+    // if (player.hasBlackJack()) {
+    //   print("You got a blackjack! You win!");
+    //   return player;
+    // }
+
+    if (player.checkHandValue() == 21) {
+      print("What's 9 + 10? 21! You win!");
+      player.bal.increaseBalance(amount: player.Bet * 2);
+      return player;
+    }
+
+    if (dealer.checkHandValue() == 21) {
+      print("The dealer got 21. You lose!");
       return dealer;
+    }
+    
+    if (player.checkHandValue() > 21) {
+      print("You got busted by the cops! You Lose!")
+      return dealer;
+    }
+
+    if (dealer.checkHandValue() > 21) {
+      print("Dealer got busted by the cops! You Win!")
+      player.bal.increaseBalance(amount: player.Bet * 2);
+      return player;
     }
   }
 
+  print("Player hand value: \(player.checkHandValue())\nDealer hand value: \(dealer.checkHandValue())\n");
+  
   if (player.checkHandValue() > dealer.checkHandValue()) {
-    print("You Win!")
+    print("Your cards have higher value than the dealer. You Win!")
+    player.bal.increaseBalance(amount: player.Bet * 2);
     return player;
   } else {
-    print("You Lose!")
+    print("You have less than the dealer. You Lose!")
     return dealer;
   }
 }
