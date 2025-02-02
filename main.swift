@@ -8,25 +8,28 @@ enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NIN
 public func main() {
   // Generate the deck that will be used
   var deck: Deck = Deck();
-  
+
   // generate the players and the deck
-  let player: Player = Player(deck: deck);
-  let dealer: Dealer = Dealer(deck: deck);
-  
+  let player: Player = Player(deck: deck, description : "Player");
+  let dealer: Dealer = Dealer(deck: deck, description : "Dealer");
+
   var winner: BlackJackParticipant? = nil;
-  
+
   print("Welcome to BlackJack!\n");
-  var roundNum: Int = 1;
+  var roundNum: Int = 0;
 
   // play until someone wins
   while winner == nil {
     deck.shuffle();
-    print("Round \(roundNum += 1)\n");
+    roundNum += 1;
+    print("Round \(roundNum)\n");
+
     winner = playRound(player: player, dealer: dealer);
     deck = Deck();
   }
   // announce winner
-  print("Congrats to \(winner) for winning the game!");
+  print("Congrats to \(winner!.description) for winning the game!");
+
 }
 
 /**
@@ -67,7 +70,7 @@ class Deck {
     for suit in 1...4 {
       for value in 1...13 {
         // did new line for readability
-        let newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
+        var newCard: Card = Card(suit: cardSuit(rawValue: suit)!,
                                  val: cardVal(rawValue: value)!)
         self.cards.append(newCard)
       }
@@ -104,17 +107,17 @@ protocol BlackJackActions {
 class BlackJackParticipant : BlackJackActions {
   internal var description: String;
   internal var hand: [Card] = Array<Card>(); // holds the participants hand of cards
-  private var deck: Deck
+  internal var deck: Deck
 
   // Initialize a participant with a hand of cards
-  public init(deck : Deck) {
-    description = "Dealer";
+  public init(deck : Deck, description: String) {
+    self.description = description;
     self.deck = deck;
   }
-  
+
   // Allows player to draw a card from the deck and add it to their hand
   func hit() -> Card {
-    let newCard: Card = deck.drawCard();
+    var newCard: Card = deck.drawCard();
     hand.append(newCard);
     return newCard;
   }
@@ -135,15 +138,24 @@ class BlackJackParticipant : BlackJackActions {
 * and work with their balance
 */
 class Player : BlackJackParticipant {
-  
+
   private var balance : Balance; // keeps track of balance (bet amount)
   private var bet : Double;
 
   // initialize player with 100.00 balance
   public override init(deck targetedDeck: Deck, description: String = "Player") {
     self.balance = Balance(startingBalance: 100.00);
-    self.bet = -1.00; // force them to set it 
+    self.bet = -1.00; // force them to set a bet
     super.init(deck : targetedDeck, description: description);
+  }
+
+  // prints out tha cards in their hand and the total value
+  public func viewHand() {
+    print ("Current hand:")
+    for card in 0..<self.hand.count {
+      print("\(self.hand[card].toString())")
+    }
+    print("Current hand value: \(self.checkHandValue())\n");
   }
 
   // For half of their current bet, 
@@ -181,7 +193,7 @@ class Player : BlackJackParticipant {
             "[h]it: draw a \n" +
             "[s]tand: \n" +
             "replace [d]ealer card: \n" +
-            "replace [l]ast dealt card: \n"
+            "replace [l]ast dealt card: \n";
   }
 }
 
@@ -190,19 +202,30 @@ class Player : BlackJackParticipant {
 */
 class Dealer : BlackJackParticipant {
 
-  private var faceUpCard : Card;
-  
+  // optional because it can only happen after cards have been dealt
+  internal var faceUpCard : Card?; 
+
   // Initialize a dealer with a hand of cards
-  public override init(deck targetedDeck: Deck) {
-    self.faceUpCard = Card(suit: cardSuit.CLUBS, val: cardVal.ACE)
-    super.init(deck: targetedDeck);
-    self.faceUpCard =  self.hand[Int.random(in: 0...self.hand.count)];
+  public override init(deck targetedDeck: Deck, description : String) {
+    super.init(deck: targetedDeck, description: description);
   }
 
-  public func viewFaceUpCard() -> Card {
-    return faceUpCard;
+  // takes a random card in the dealers hand and turns it face up
+  public func turnCardFaceUp() {
+    self.faceUpCard =  self.hand[Int.random(in: 0..<self.hand.count)];
   }
 
+  // prints the faceup card in the dealers hand
+  // flips one if there isn't one
+  public func viewFaceUpCard() {
+    print("Dealer's face-up card:");
+    if self.faceUpCard == nil {
+      self.turnCardFaceUp();
+    } 
+    print("\((self.faceUpCard!).toString())\n");
+  }
+
+  // replaces faceup card with a new one from the deck
   public func replaceFaceUpCard() {
     self.faceUpCard = self.deck.drawCard();
   }
@@ -244,29 +267,32 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // assert that an active round is in session
   var activeRound: Bool = true
 
-  // ask the user how much will the be betting
+  // ask the user how much will the be betting before each round
   player.placeBet();
 
-  for _ in 0...2 {
+  // each draw 2 cards into hand
+  for _ in 0..<2 {
     player.hit();
     dealer.hit();
   }
 
   // while the round is still active
   while (activeRound) {
-    // prompt the user on what action they will take
-    print ("Current hand: \n")
-    for card in 0...player.hand.count {
-      print("\(player.hand[card].toString())\n")
-    }
-    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card\n")
-    let action: String = readLine()!
-    // print("Current Value: \(player.checkHandValue())")
-    
+
+    // show the hand
+    player.viewHand();
+
+    // show dealers face up card, flipping one if there isn't one already face up
+    dealer.viewFaceUpCard();
+
+    print("What will you do? Actions: [h]it, [s]tand, replace [d]ealer card, replace [l]ast dealt card, [v]iew rules")
+    var action: String = readLine()!
+
     // handle the action that the user has specified
     switch(action) {
       case "h":
-        let _ = player.hit()
+        print("Drawn Card: \(player.hit().toString())\n" + 
+        "New Hand Value: \(player.checkHandValue())\n");
         break;
       case "s":
         activeRound = false
