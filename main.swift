@@ -181,7 +181,7 @@ class Player : BlackJackParticipant {
             "[h]it: draw a \n" +
             "[s]tand: \n" +
             "replace [d]ealer card: \n" +
-            "replace [l]ast dealt card: \n" +
+            "replace [l]ast dealt card: \n"
   }
 }
 
