@@ -20,6 +20,7 @@ public func main() {
 
   // play you go broke or if you quit
   while cont {
+    dealer.clearFaceUpCard();
     player.clearHand();
     dealer.clearHand();
     deck.shuffle();
@@ -303,6 +304,10 @@ class Dealer : BlackJackParticipant {
     print("\((self.faceUpCard!).toString())\n");
   }
 
+  public func clearFaceUpCard() {
+    self.faceUpCard = nil;
+  }
+
   // replaces faceup card with a new one from the deck
   public func replaceFaceUpCard() {
     self.faceUpCard = self.deck.drawCard();
@@ -406,6 +411,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
 
     if (player.hasBlackJack()) {
       print("You got a blackjack! You win!");
+      player.bal.increaseBalance(amount: player.Bet * 2.5);
       return player;
     }
 
@@ -420,13 +426,6 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     if (dealer.checkHandValue() == 21) {
       print("The dealer got 21. You lose!");
       return dealer;
-    }
-    
-    // dealer bust
-   if (dealer.checkHandValue() > 21) {
-      print("Dealer got busted by the cops! You Win!")
-      player.bal.increaseBalance(amount: player.Bet * 2);
-      return player;
     }
 
     // player bust, allows player to keep drawing new card if they keep going over 21
