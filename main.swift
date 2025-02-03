@@ -67,7 +67,19 @@ struct Card {
   }
 
   func toString() -> String {
-    return "\(value) of \(suit)"
+    var cardSymbol = "";
+
+    switch self.suit {
+      case SPADE:
+        cardSymbol = "♤";
+      case CLUBS:
+        cardSymbol = "♧";
+      case DIAMOND:
+        cardSymbol = "♢";
+      default:
+        cardSymbol = "♡";
+    }
+    return "\(value) of \(cardSymbol)"
   }
 }
 
@@ -142,11 +154,13 @@ class BlackJackParticipant : BlackJackActions {
   func checkHandValue() -> Int {
     var handValue: Int = 0;
     for card: Card in hand {
-      if (card.value.rawValue == 1 && handValue < 10) {
+      if (card.value.rawValue == 1 && handValue <= 10) { // ace increase on small hand
         handValue += 11;
-      } else if (card.value.rawValue < 10) {
+      } else if (card.value.rawValue == 1 && handValue > 10) { // ace decrease on large hand
+        handValue += 1;
+      } else if (card.value.rawValue > 1 && card.value.rawValue < 10) { // normal cards
         handValue += card.value.rawValue;
-      } else {
+      } else { // face cards
         handValue += 10;
       }
     }
@@ -443,8 +457,6 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       return player; // if they drew again and didn't go over 21 they can keep playing
     }
 
-
-
     // player bust
     if (player.checkHandValue() > 21) {
       let winner: BlackJackParticipant = playerBust(); 
@@ -454,7 +466,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       }
     }
 
-   
+   // dealer bust
     if (dealer.checkHandValue() > 21) {
       print("Dealer got busted by the cops! You Win!")
       player.bal.increaseBalance(amount: player.Bet * 2);
@@ -464,6 +476,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
 
   print("Player hand value: \(player.checkHandValue())\nDealer hand value: \(dealer.checkHandValue())\n");
   
+  // return winner based on hand value
   if (player.checkHandValue() > dealer.checkHandValue()) {
     print("Your cards have higher value than the dealer. You Win!")
     player.bal.increaseBalance(amount: player.Bet * 2);
@@ -471,7 +484,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   } else if (player.checkHandValue() < dealer.checkHandValue()) {
     print("You have less than the dealer. You Lose!")
     return dealer;
-  } else {
+  } else { // tie
     return BlackJackParticipant(deck: Deck(), description: "Tie");
   }
 }
