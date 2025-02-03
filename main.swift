@@ -6,6 +6,7 @@ enum cardSuit: Int { case SPADE = 1, CLUBS, DIAMOND, HEART }
 enum cardVal: Int { case ACE = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING } 
 
 public func main() {
+
   // Generate the deck that will be used
   var deck: Deck = Deck();
 
@@ -13,22 +14,24 @@ public func main() {
   let player: Player = Player(deck: deck, description : "Player");
   let dealer: Dealer = Dealer(deck: deck, description : "Dealer");
 
-  var cont: Bool = true
-
+  // Intro
   print("Welcome to BlackJack!\n");
   var roundNum: Int = 0;
 
-  // play you go broke or if you quit
+  // game continues until they say no or run out of money
+  var cont: Bool = true 
   while cont {
     dealer.clearFaceUpCard();
     player.clearHand();
     dealer.clearHand();
     deck.shuffle();
     roundNum += 1;
-    print("Round \(roundNum)\n");
 
+    // play round
+    print("Round \(roundNum)\n");
     let winner = playRound(player: player, dealer: dealer);
-    deck = Deck();
+
+    deck = Deck(); // reset deck between rounds
 
     // announce winner
     if (winner?.description == "Tie") {
@@ -37,6 +40,7 @@ public func main() {
       print("Congrats to \(winner!.description) for winning round \(roundNum)!\n");
     }
     
+    // allow continuation if they still have money
     if (player.bal.getBalance() <= 0) {
       print("You have gone broke! No more gambling! Game Over\n");
       cont = false;
@@ -45,7 +49,6 @@ public func main() {
       cont = readLine() == "y";
     }
   }
-  
   print("Thanks for playing!")
 }
 
@@ -213,18 +216,15 @@ class Player : BlackJackParticipant {
     print("Current hand value: \(self.checkHandValue())\n");
   }
 
-  // For half of their current bet, 
-  //the player can force the dealer to draw a replacement card
+  // For half of their current bet, the player can force the dealer to draw a replacement card
   public func replaceDealerCard(dealer: Dealer) {
     let cost = self.bet * 0.5
     self.bal.reduceBalance(amount: cost);
-
     dealer.replaceFaceUpCard();
     print("Cost: \(cost) New Balance: \(self.bal.getBalance())");
   }
 
-  // For 25% of their current bet, 
-  // the player can replace the card that they drew last 
+  // For 25% of their current bet, the player can replace the card that they drew last 
   public func replaceLastDealtCard() {
 
     // pay 25% of their current bet
@@ -252,6 +252,7 @@ class Player : BlackJackParticipant {
     self.balance.reduceBalance(amount: self.bet);
   }
 
+  // display the game rules
    public func getRules() -> String {
     return "BlackJack Rules\n You will start with a balance of $100.00\n" +
             "You can bet $0.01 up to the amount of your balance.\n" +
@@ -287,8 +288,7 @@ class Dealer : BlackJackParticipant {
     self.faceUpCard =  self.hand[Int.random(in: 0..<self.hand.count)];
   }
 
-  // prints the faceup card in the dealers hand
-  // flips one if there isn't one
+  // prints the faceup card in the dealers hand, flips one if there isn't one
   public func viewFaceUpCard() {
     print("Dealer's face-up card:");
     if self.faceUpCard == nil {
@@ -340,6 +340,7 @@ class Balance {
 * Returns the winning participant if there is a winner
 */
 func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
+  
   // assert that both players are actively taking their turns
   var playerHitting: Bool = true;
   var dealerHitting: Bool = true;
@@ -353,7 +354,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     let _ = dealer.hit();
   }
 
-  // check if player dealt BlackJack
+  // check if player has been dealt BlackJack
   if (player.hasBlackJack()) {
   if (dealer.hasBlackJack()) { // draw
     return BlackJackParticipant(deck: Deck(), description: "Tie");
@@ -363,7 +364,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     return player;
   }
 
-  // check if dealer dealt blackjack
+  // check if dealer has been dealt blackjack
     if (dealer.hasBlackJack()) {
     print("Dealer got a blackjack! You lose!");
     return dealer;
@@ -373,11 +374,8 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
   // while the round is still active
   while (playerHitting || dealerHitting) {
 
-    // show the hand
-    player.viewHand();
-
-    // show dealers face up card, flipping one if there isn't one already face up
-    dealer.viewFaceUpCard();
+    player.viewHand(); // show the hand
+    dealer.viewFaceUpCard();// show dealers face up card, flipping one if there isn't one already face up
 
     // handle the action that the user has specified
     if (playerHitting) {
@@ -405,7 +403,8 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
           break;
       }
     }
-
+    
+    // dealer logic
     if (dealer.checkHandValue() < 17) {
       print("Dealer hit");
       let _ = dealer.hit();
@@ -413,20 +412,7 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       print("Dealer stands");
       dealerHitting = false;
     }
-    
-    // player 21
-    if (player.checkHandValue() == 21) {
-      print("What's 9 + 10? 21! You win!");
-      player.bal.increaseBalance(amount: player.Bet * 2);
-      return player;
-    }
-
-    // dealer 21
-    if (dealer.checkHandValue() == 21) {
-      print("The dealer got 21. You lose!");
-      return dealer;
-    }
-
+  
     // player bust, allows player to keep drawing new card if they keep going over 21
     // as long as they can afford to do so
     func playerBust() -> BlackJackParticipant {
@@ -441,26 +427,36 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       if (res == "n") {
         return dealer;
       } else {
-        print(player.bal.getBalance())
+
         // if they can afford to replace that's fine
         if (player.bal.getBalance() > 0.00) {
           player.replaceLastDealtCard();
+
           if (player.checkHandValue() > 21) { // if they bust again they can chose to replace again
             return playerBust();
-          }
-        // dealer wins if they try to replace and can't afford it
-        } else {
+          } 
+          else if (player.hasBlackJack()) { // check for bl
+            if (dealer.hasBlackJack()) { // draw
+              return BlackJackParticipant(deck: Deck(), description: "Tie");
+            } 
+            else {
+              print("You got a blackjack! You win!");
+              player.bal.increaseBalance(amount: player.Bet * 2.5);
+              return player;
+            }
+          } 
+        } else {  // dealer wins if they try to replace and can't afford it
           return dealer;
         }
       }
-      return player; // if they drew again and didn't go over 21 they can keep playing
+      return BlackJackParticipant(deck: Deck(), description: ""); // if they drew again and didn't go over 21 no winner
     }
 
     // player bust
     if (player.checkHandValue() > 21) {
       let winner: BlackJackParticipant = playerBust(); 
       // return dealer if player chose not to replace or went broke
-      if (winner.description == "Dealer") {
+      if (winner.description == "Dealer" || winner.description == "Player") {
         return winner;
       }
     }
