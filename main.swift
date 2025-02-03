@@ -70,11 +70,11 @@ struct Card {
     var cardSymbol = "";
 
     switch self.suit {
-      case SPADE:
+      case .SPADE:
         cardSymbol = "♤";
-      case CLUBS:
+      case .CLUBS:
         cardSymbol = "♧";
-      case DIAMOND:
+      case .DIAMOND:
         cardSymbol = "♢";
       default:
         cardSymbol = "♡";
