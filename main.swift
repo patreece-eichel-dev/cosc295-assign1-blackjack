@@ -268,10 +268,10 @@ class Player : BlackJackParticipant {
             "During the game you are allowed to hit, stand, replace the dealer's face up card, and replace your last dealt card\n" +
             "The game will end when a winner is determined, you choose to quit, or your balance runs out\n" + 
             "Below the actions you can take are described in detail:\n" +
-            "[h]it: draw a \n" +
-            "[s]tand: \n" +
-            "replace [d]ealer card: \n" +
-            "replace [l]ast dealt card: \n";
+            "[h]it: draw a new card\n" +
+            "[s]tand: chose to stop at the current hand value\n" +
+            "replace [d]ealer card: pay 50% of your current bet to replace the dealers face up card\n" +
+            "replace [l]ast dealt card: pay 25% of your current bet to replace your last drawn card\n";
   }
 }
 
