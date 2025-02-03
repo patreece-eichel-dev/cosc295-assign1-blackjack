@@ -203,15 +203,29 @@ class Player : BlackJackParticipant {
   // For half of their current bet, 
   //the player can force the dealer to draw a replacement card
   public func replaceDealerCard(dealer: Dealer) {
-    self.bet *= 0.5 // reduce bet by 50%
+    let cost = self.bet * 0.5
+    self.bal.reduceBalance(amount: cost);
+
     dealer.replaceFaceUpCard();
+    print("Cost: \(cost) New Balance: \(self.bal.getBalance())");
   }
 
   // For 25% of their current bet, 
   // the player can replace the card that they drew last 
   public func replaceLastDealtCard() {
-    self.bet *= 0.75; // reduce bet by 25%
-    hand[hand.count - 1] = self.deck.drawCard(); // replace last card in hand with a new one
+
+    // pay 25% of their current bet
+    let cost = self.bet * 0.25; 
+    self.bal.reduceBalance(amount: cost);
+
+    // replace last drawn card
+    let oldCard =  hand[hand.count - 1];
+    let replacement: Card = self.deck.drawCard();
+    hand[hand.count - 1] = replacement; // replace last card in hand with a new one
+
+    // show replacement and cost
+    print("Card: \(oldCard.toString()) replaced with: \(replacement.toString())");
+    print("Cost: \(cost) New Balance: \(self.bal.getBalance())");
   }
 
   // takes the amount the player wishes to bet
@@ -376,22 +390,67 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     //   return player;
     // }
 
+    // player 21
     if (player.checkHandValue() == 21) {
       print("What's 9 + 10? 21! You win!");
       player.bal.increaseBalance(amount: player.Bet * 2);
       return player;
     }
 
+    // dealer 21
     if (dealer.checkHandValue() == 21) {
       print("The dealer got 21. You lose!");
       return dealer;
     }
     
-    if (player.checkHandValue() > 21) {
-      print("You got busted by the cops! You Lose!")
-      return dealer;
+    // dealer bust
+   if (dealer.checkHandValue() > 21) {
+      print("Dealer got busted by the cops! You Win!")
+      player.bal.increaseBalance(amount: player.Bet * 2);
+      return player;
     }
 
+    // player bust, allows player to keep drawing new card if they keep going over 21
+    // as long as they can afford to do so
+    func playerBust() -> BlackJackParticipant {
+      print("Bust!");
+      var res: String = "";
+      repeat {
+        print("Your balance: \(player.bal.getBalance()) Would you like to draw a new card for a cost of \(player.Bet * 0.25) (y/n)")
+        res = readLine()!;
+      } while (res != "y" && res != "n")
+
+      // dealer wins if they chose not to replace
+      if (res == "n") {
+        return dealer;
+      } else {
+        print(player.bal.getBalance())
+        // if they can afford to replace that's fine
+        if (player.bal.getBalance() > 0.00) {
+          player.replaceLastDealtCard();
+          if (player.checkHandValue() > 21) { // if they bust again they can chose to replace again
+            return playerBust();
+          }
+        // dealer wins if they try to replace and can't afford it
+        } else {
+          return dealer;
+        }
+      }
+      return player; // if they drew again and didn't go over 21 they can keep playing
+    }
+
+
+
+    // player bust
+    if (player.checkHandValue() > 21) {
+      let winner: BlackJackParticipant = playerBust(); 
+      // return dealer if player chose not to replace or went broke
+      if (winner.description == "Dealer") {
+        return winner;
+      }
+    }
+
+   
     if (dealer.checkHandValue() > 21) {
       print("Dealer got busted by the cops! You Win!")
       player.bal.increaseBalance(amount: player.Bet * 2);
