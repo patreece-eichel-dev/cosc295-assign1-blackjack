@@ -173,14 +173,7 @@ class BlackJackParticipant : BlackJackActions {
   }
 
   func hasBlackJack() -> Bool {
-    if (hand[0] == Card(suit: cardSuit.SPADE, val: cardVal.ACE) && hand[1] == Card(suit: cardSuit.SPADE, val: cardVal.JACK)
-       || hand[0] == Card(suit: cardSuit.CLUBS, val: cardVal.ACE) && hand[1] == Card(suit: cardSuit.CLUBS, val: cardVal.JACK)
-       || hand[0] == Card(suit: cardSuit.SPADE, val: cardVal.JACK) && hand[1] == Card(suit: cardSuit.SPADE, val: cardVal.ACE)
-       || hand[0] == Card(suit: cardSuit.CLUBS, val: cardVal.JACK) && hand[1] == Card(suit: cardSuit.CLUBS, val: cardVal.ACE)) {
-      return true;
-    } else {
-      return false;
-    }
+   return self.checkHandValue() == 21;
   }
 }
 
