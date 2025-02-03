@@ -52,7 +52,7 @@ public func main() {
  * This is the card class that will be used as a reference for the deck and 
  * players hands
  */
-struct Card {
+struct Card: Equatable {
   private var suit: cardSuit
   private var val: cardVal
   var value: cardVal {
@@ -157,14 +157,16 @@ class BlackJackParticipant : BlackJackActions {
     hand = Array<Card>();
   }
 
-  // func hasBlackJack() -> Bool {
-  //   if (hand.contains(where: Card(suit: cardSuit.CLUBS, val: cardVal.ACE) && Card(suit:cardSuit.CLUBS, val: cardVal.JACK) ||
-  //     Card(suit: cardSuit.SPADE, val: cardVal.ACE) && Card(suit:cardSuit.SPADE, val: cardVal.JACK))) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // }
+  func hasBlackJack() -> Bool {
+    if (hand[0] == Card(suit: cardSuit.SPADE, val: cardVal.ACE) && hand[1] == Card(suit: cardSuit.SPADE, val: cardVal.JACK)
+       || hand[0] == Card(suit: cardSuit.CLUBS, val: cardVal.ACE) && hand[1] == Card(suit: cardSuit.CLUBS, val: cardVal.JACK)
+       || hand[0] == Card(suit: cardSuit.SPADE, val: cardVal.JACK) && hand[1] == Card(suit: cardSuit.SPADE, val: cardVal.ACE)
+       || hand[0] == Card(suit: cardSuit.CLUBS, val: cardVal.JACK) && hand[1] == Card(suit: cardSuit.CLUBS, val: cardVal.ACE)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 
@@ -173,7 +175,6 @@ class BlackJackParticipant : BlackJackActions {
 * and work with their balance
 */
 class Player : BlackJackParticipant {
-
   private var balance : Balance; // keeps track of balance (bet amount)
   private var bet : Double;
 
@@ -384,15 +385,15 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       dealerHitting = false;
     }
     
-    // if (dealer.hasBlackJack()) {
-    //   print("Dealer got a blackjack! You lose!");
-    //   return dealer;
-    // }
+    if (dealer.hasBlackJack()) {
+      print("Dealer got a blackjack! You lose!");
+      return dealer;
+    }
 
-    // if (player.hasBlackJack()) {
-    //   print("You got a blackjack! You win!");
-    //   return player;
-    // }
+    if (player.hasBlackJack()) {
+      print("You got a blackjack! You win!");
+      return player;
+    }
 
     // player 21
     if (player.checkHandValue() == 21) {
