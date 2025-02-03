@@ -30,7 +30,11 @@ public func main() {
     deck = Deck();
 
     // announce winner
-    print("Congrats to \(winner!.description) for winning round \(roundNum)!\n");
+    if (winner?.description == "Tie") {
+      print("It was a tie"); 
+    } else {
+      print("Congrats to \(winner!.description) for winning round \(roundNum)!\n");
+    }
     
     if (player.bal.getBalance() <= 0) {
       print("You have gone broke! No more gambling! Game Over\n");
@@ -464,9 +468,11 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     print("Your cards have higher value than the dealer. You Win!")
     player.bal.increaseBalance(amount: player.Bet * 2);
     return player;
-  } else {
+  } else if (player.checkHandValue() < dealer.checkHandValue()) {
     print("You have less than the dealer. You Lose!")
     return dealer;
+  } else {
+    return BlackJackParticipant(deck: Deck(), description: "Tie");
   }
 }
 
