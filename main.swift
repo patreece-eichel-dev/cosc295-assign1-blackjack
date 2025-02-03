@@ -360,6 +360,23 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
     let _ = dealer.hit();
   }
 
+  // check if player dealt BlackJack
+  if (player.hasBlackJack()) {
+  if (dealer.hasBlackJack()) { // draw
+    return BlackJackParticipant(deck: Deck(), description: "Tie");
+  } else {
+    print("You got a blackjack! You win!");
+    player.bal.increaseBalance(amount: player.Bet * 2.5);
+    return player;
+  }
+
+  // check if dealer dealt blackjack
+    if (dealer.hasBlackJack()) {
+    print("Dealer got a blackjack! You lose!");
+    return dealer;
+  }
+}
+
   // while the round is still active
   while (playerHitting || dealerHitting) {
 
@@ -404,17 +421,6 @@ func playRound(player: Player, dealer: Dealer) -> BlackJackParticipant? {
       dealerHitting = false;
     }
     
-    if (dealer.hasBlackJack()) {
-      print("Dealer got a blackjack! You lose!");
-      return dealer;
-    }
-
-    if (player.hasBlackJack()) {
-      print("You got a blackjack! You win!");
-      player.bal.increaseBalance(amount: player.Bet * 2.5);
-      return player;
-    }
-
     // player 21
     if (player.checkHandValue() == 21) {
       print("What's 9 + 10? 21! You win!");
